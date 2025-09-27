@@ -22,8 +22,41 @@
         draftedPlayers: new Set(),
         format: 'Snake',
         isActive: false,
+        hasCompleted: false,
         scores: {}
       };
+
+      function updateStartButton() {
+        const startBtn = qs('[data-action="start-draft"]');
+        if (!startBtn) return;
+        if (state.isActive) {
+          startBtn.textContent = 'Draft in Progress';
+        } else if (state.hasCompleted) {
+          startBtn.textContent = 'Restart Draft';
+        } else {
+          startBtn.textContent = 'Start Draft';
+        }
+      }
+
+      const tournamentThemes = {
+        'masters': 'theme-masters',
+        'pga championship': 'theme-pga',
+        'pga': 'theme-pga',
+        'u.s. open': 'theme-us-open',
+        'us open': 'theme-us-open',
+        'the open': 'theme-open',
+        'open championship': 'theme-open'
+      };
+
+      function applyTournamentTheme(label) {
+        const body = document.body;
+        if (!body) return;
+        const key = (label || '').toLowerCase().trim();
+        const themeClass = tournamentThemes[key] || 'theme-masters';
+        Object.values(tournamentThemes).forEach(cls => body.classList.remove(cls));
+        body.classList.remove('theme-default');
+        body.classList.add(themeClass);
+      }
 
       // ===== Helpers =====
       function renderPar(n) {
@@ -311,6 +344,67 @@
         qsa(`.slot[data-player-id="${playerId}"] .chip`).forEach(ch => ch.textContent = val);
       }
 
+      function applyOddsUpdate(playerEl, odds) {
+        if (!playerEl) return false;
+        const id = playerEl.getAttribute('data-player-id');
+        const tier = playerEl.getAttribute('data-tier');
+        if (!id || !tier) return false;
+        playerEl.setAttribute('data-odds', odds);
+        const oddsEl = playerEl.querySelector('.odds');
+        if (oddsEl) oddsEl.textContent = odds;
+        qsa(`.team .slot[data-player-id="${id}"] .subtle`).forEach(el => { el.textContent = `Tier ${tier} • ${odds}`; });
+        qsa(`#draft-board .cell[data-player-id="${id}"] .subtle`).forEach(el => { el.textContent = `${odds} • Tier ${tier}`; });
+        const leaderboardRow = qs(`#team-leaderboards tr[data-player-id="${id}"]`);
+        if (leaderboardRow) {
+          const oddsCell = leaderboardRow.children[2];
+          if (oddsCell) oddsCell.textContent = odds;
+        }
+        return true;
+      }
+
+      function importOddsCSV(text) {
+        const lines = (text || '')
+          .split(/\r?\n|;/)
+          .map(line => line.trim())
+          .filter(Boolean);
+        if (!lines.length) {
+          announce('Provide odds CSV data to import.');
+          return { updated: 0, missing: [] };
+        }
+        let updated = 0;
+        const missing = [];
+        lines.forEach(line => {
+          const parts = line.split(',').map(part => part.trim());
+          if (parts.length < 2) {
+            return;
+          }
+          const [name, odds] = parts;
+          if (!name || !odds) {
+            return;
+          }
+          const playerEl = qsa('.player').find(card => {
+            const cardName = card.querySelector('.name')?.textContent?.trim() || '';
+            return cardName.toLowerCase() === name.toLowerCase();
+          });
+          if (!playerEl) {
+            missing.push(name);
+            return;
+          }
+          if (applyOddsUpdate(playerEl, odds)) {
+            updated += 1;
+          }
+        });
+        if (updated) {
+          announce(`Updated odds for ${updated} player${updated === 1 ? '' : 's'}.`);
+        } else {
+          announce('No matching players found to update.');
+        }
+        if (missing.length) {
+          console.warn('[Odds Import] Players not found:', missing.join(', '));
+        }
+        return { updated, missing };
+      }
+
       function buildBoard(format) {
         const board = qs('#draft-board');
         if (!board) return;
@@ -351,7 +445,9 @@
         state.draftedPlayers.clear();
         state.pickOrder = computePickOrder(state.format);
         state.isActive = false;
+        state.hasCompleted = false;
         state.scores = {};
+        updateStartButton();
         buildBoard(state.format);
         clearTeams();
         clearPlayerPool();
@@ -368,6 +464,8 @@
         buildBoard(state.format);
         state.pickOrder = computePickOrder(state.format);
         state.isActive = true;
+        state.hasCompleted = false;
+        updateStartButton();
         updateOnClock();
         announce(`${state.format} draft started. Team ${currentTeam()} is on the clock.`);
       }
@@ -439,7 +537,13 @@
 
       function finishDraft() {
         state.isActive = false;
+        state.hasCompleted = true;
+        updateStartButton();
         updateOnClock();
+        const leaderboard = qs('[aria-label="Leaderboard"]');
+        if (leaderboard && typeof leaderboard.scrollIntoView === 'function') {
+          leaderboard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
         announce('Draft complete.');
       }
 
@@ -517,6 +621,13 @@
             state.format = e.target.value;
             resetBoard({ silent: true });
             announce(`Format set to ${state.format}. Choose Start Draft to begin.`);
+          });
+        }
+
+        const tournamentSelect = qs('[data-hook="tournament-select"]');
+        if (tournamentSelect) {
+          tournamentSelect.addEventListener('change', (e) => {
+            applyTournamentTheme(e.target.value);
           });
         }
 
@@ -604,6 +715,18 @@
         document.body.appendChild(a); a.click();
         setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 0);
         });
+        const oddsBtn = qs('[data-action="import-odds"]');
+        if (oddsBtn) oddsBtn.addEventListener('click', () => {
+          const textarea = qs('#odds-csv');
+          const contents = textarea?.value || '';
+          if (!contents.trim()) {
+            announce('Paste odds CSV data first.');
+            return;
+          }
+          importOddsCSV(contents);
+          if (textarea) textarea.value = '';
+        });
+
         const pool = qs('#tiers');
         if (pool) {
           pool.addEventListener('click', (e) => {
@@ -636,13 +759,21 @@
         const y = qs('#year'); if (y) y.textContent = new Date().getFullYear();
         const formatSelect = qs('[data-hook="format-select"]');
         if (formatSelect) state.format = formatSelect.value;
+        const tournamentSelect = qs('[data-hook="tournament-select"]');
+        if (tournamentSelect) {
+          applyTournamentTheme(tournamentSelect.value);
+        } else {
+          applyTournamentTheme('Masters');
+        }
         const playersSelect = qs('[data-hook="players-select"]');
         const initialTeams = playersSelect ? Number(playersSelect.value) : state.teamCount;
         handleTeamCountChange(initialTeams, { silent: true });
         attachHandlers();
-        state.isActive = true; // Ready to pick immediately
+        state.isActive = false;
+        state.hasCompleted = false;
+        updateStartButton();
         updateOnClock();
-        announce(`Draft ready. Team ${currentTeam()} is on the clock.`);
+        announce('Draft ready. Choose Start Draft to begin.');
         recomputeTeamTotals();
       }
 

@@ -6,12 +6,12 @@
   <title>Golf Majors Draft</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="theme-masters">
   <div class="shell">
     <!-- ===== Topbar ===== -->
     <header class="topbar" role="banner">
       <div class="brand" aria-label="Site brand">
-        <div class="logo" aria-hidden="true"></div>
+        <img class="logo" src="/Users/thomasburns/Documents/PythonProjects/Golf_Drafting_Site/Masters_Logo.png" alt="Masters Tournament logo" />
         <h1>Golf Majors Draft</h1>
       </div>
       <div class="controls" role="group" aria-label="Draft Controls">
@@ -39,11 +39,29 @@
             <option value="4" selected>4</option>
           </select>
         </div>
-        <button class="button" data-action="start-draft" aria-label="Start Draft">Start Draft</button>
         <button class="button secondary" data-action="reset" aria-label="Reset Board">Reset</button>
         <button class="button secondary" data-action="export" aria-label="Export CSV">Export CSV</button>
       </div>
     </header>
+
+    <!-- Leaderboard & Live Scoring -->
+    <section class="card" aria-label="Leaderboard" style="margin-top:16px">
+      <h2>Leaderboard</h2>
+      <p class="subtle">Track drafted golfers round-by-round. Enter each round's <strong>to-par</strong> (R1–R4) to see the auto-summed total.</p>
+
+      <div id="team-totals" class="teams" style="margin-bottom:12px"></div>
+
+      <div id="team-leaderboards" class="team-leaderboards"></div>
+
+      <div class="controls" style="margin-top:12px">
+        <div class="control" style="flex:1 1 320px">
+          <label for="scores-csv">Import CSV (player-id, r1, r2, r3, r4)</label>
+          <input id="scores-csv" type="text" placeholder="jon-rahm,-2,-1,0,+3; rory-mcilroy,-1,0,-2,+1" />
+        </div>
+        <button class="button" data-action="import-scores">Import</button>
+        <button class="button secondary" data-action="export-scores">Export Scores CSV</button>
+      </div>
+    </section>
 
     <!-- ===== Main Grid ===== -->
     <section class="grid" role="main">
@@ -66,6 +84,13 @@
           </div>
           <button type="submit" class="button secondary" data-action="add-player">Add Golfer</button>
         </form>
+
+        <div class="odds-import">
+          <label for="odds-csv">Import Odds CSV (Player, Odds)</label>
+          <textarea id="odds-csv" placeholder="Rory McIlroy,+650
+Scottie Scheffler,+450" aria-label="Odds CSV"></textarea>
+          <button class="button secondary" data-action="import-odds">Import Odds</button>
+        </div>
 
         <div class="tiers" id="tiers">
           <!-- Tier 1 -->
@@ -190,39 +215,26 @@
         </div>
       </aside>
 
-      <!-- Middle: Draft Board -->
-      <section class="card" aria-label="Draft Board">
-        <h2>Draft Board</h2>
-        <p class="subtle">Snake order supported • 4 rounds • 4 teams</p>
-        <div class="board" id="draft-board">
-          <!-- Board is rebuilt by JS on start/reset to guarantee correct order. -->
+      <div class="draft-column">
+        <div class="draft-actions">
+          <button class="button" data-action="start-draft" aria-label="Start Draft">Start Draft</button>
         </div>
-      </section>
+        <!-- Middle: Draft Board -->
+        <section class="card" aria-label="Draft Board">
+          <h2>Draft Board</h2>
+          <p class="subtle">Snake order supported • 4 rounds • 4 teams</p>
+          <div class="board" id="draft-board">
+            <!-- Board is rebuilt by JS on start/reset to guarantee correct order. -->
+          </div>
+        </section>
+      </div>
 
-      <!-- Right: Teams / Rosters -->
-      <aside class="card" aria-label="Teams">
-        <h2>Teams</h2>
-        <div class="teams" id="teams"></div>
-      </aside>
     </section>
 
-    <!-- Leaderboard & Live Scoring -->
-    <section class="card" aria-label="Leaderboard" style="margin-top:16px">
-      <h2>Leaderboard</h2>
-      <p class="subtle">Track drafted golfers round-by-round. Enter each round's <strong>to-par</strong> (R1–R4) to see the auto-summed total.</p>
-
-      <div id="team-totals" class="teams" style="margin-bottom:12px"></div>
-
-      <div id="team-leaderboards" class="team-leaderboards"></div>
-
-      <div class="controls" style="margin-top:12px">
-        <div class="control" style="flex:1 1 320px">
-          <label for="scores-csv">Import CSV (player-id, r1, r2, r3, r4)</label>
-          <input id="scores-csv" type="text" placeholder="jon-rahm,-2,-1,0,+3; rory-mcilroy,-1,0,-2,+1" />
-        </div>
-        <button class="button" data-action="import-scores">Import</button>
-        <button class="button secondary" data-action="export-scores">Export Scores CSV</button>
-      </div>
+    <!-- Teams -->
+    <section class="card" aria-label="Teams" style="margin-top:16px">
+      <h2>Teams</h2>
+      <div class="teams" id="teams"></div>
     </section>
 
     <!-- Rules & Notes -->
