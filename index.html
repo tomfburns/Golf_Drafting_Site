@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Golf Majors Draft</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="shell">
+    <!-- ===== Topbar ===== -->
+    <header class="topbar" role="banner">
+      <div class="brand" aria-label="Site brand">
+        <div class="logo" aria-hidden="true"></div>
+        <h1>Golf Majors Draft</h1>
+      </div>
+      <div class="controls" role="group" aria-label="Draft Controls">
+        <div class="control">
+          <label for="tournament">Tournament</label>
+          <select id="tournament" name="tournament" data-hook="tournament-select">
+            <option>Masters</option>
+            <option>PGA Championship</option>
+            <option>U.S. Open</option>
+            <option>The Open</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="format">Format</label>
+          <select id="format" name="format" data-hook="format-select">
+            <option>Snake</option>
+            <option>Linear</option>
+          </select>
+        </div>
+        <div class="control">
+          <label for="players">Players</label>
+          <select id="players" name="players" data-hook="players-select">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4" selected>4</option>
+          </select>
+        </div>
+        <button class="button" data-action="start-draft" aria-label="Start Draft">Start Draft</button>
+        <button class="button secondary" data-action="reset" aria-label="Reset Board">Reset</button>
+        <button class="button secondary" data-action="export" aria-label="Export CSV">Export CSV</button>
+      </div>
+    </header>
+
+    <!-- ===== Main Grid ===== -->
+    <section class="grid" role="main">
+      <!-- Left: Tiers / Player Pool -->
+      <aside class="card" aria-label="Player Pool">
+        <h2>Player Pool</h2>
+        <p class="subtle">4 tiers • Draft by odds • Click a player to draft</p>
+
+        <form id="add-player-form" class="add-player-form" autocomplete="off">
+          <h3>Add Golfer</h3>
+          <div class="add-player-fields">
+            <input id="new-player-name" name="name" type="text" placeholder="Golfer name" aria-label="Golfer name" required />
+            <input id="new-player-odds" name="odds" type="text" placeholder="Odds (e.g., +3500)" aria-label="Golfer odds" required />
+            <select id="new-player-tier" name="tier" aria-label="Tier" required>
+              <option value="1">Tier 1</option>
+              <option value="2">Tier 2</option>
+              <option value="3">Tier 3</option>
+              <option value="4">Tier 4</option>
+            </select>
+          </div>
+          <button type="submit" class="button secondary" data-action="add-player">Add Golfer</button>
+        </form>
+
+        <div class="tiers" id="tiers">
+          <!-- Tier 1 -->
+          <div class="tier" data-tier="1">
+            <div class="tier-header">
+              <span class="tier-label">Tier 1</span>
+              <span class="tier-limit">Pick ≤ 1</span>
+            </div>
+            <div class="players" role="list">
+              <div class="player" role="listitem" data-player-id="rory-mcilroy" data-odds="+650" data-tier="1">
+                <span class="name">Rory McIlroy</span>
+                <span class="odds">+650</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="scottie-scheffler" data-odds="+450" data-tier="1">
+                <span class="name">Scottie Scheffler</span>
+                <span class="odds">+450</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="jon-rahm" data-odds="+900" data-tier="1">
+                <span class="name">Jon Rahm</span>
+                <span class="odds">+900</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="patrick-cantlay" data-odds="+1200" data-tier="1">
+                <span class="name">Patrick Cantlay</span>
+                <span class="odds">+1200</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier 2 -->
+          <div class="tier" data-tier="2">
+            <div class="tier-header">
+              <span class="tier-label">Tier 2</span>
+              <span class="tier-limit">Pick ≤ 1</span>
+            </div>
+            <div class="players" role="list">
+              <div class="player" role="listitem" data-player-id="xander-schauffele" data-odds="+1400" data-tier="2">
+                <span class="name">Xander Schauffele</span>
+                <span class="odds">+1400</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="brooks-koepka" data-odds="+1600" data-tier="2">
+                <span class="name">Brooks Koepka</span>
+                <span class="odds">+1600</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="ludvig-aberg" data-odds="+1800" data-tier="2">
+                <span class="name">Ludvig Åberg</span>
+                <span class="odds">+1800</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="cameron-smith" data-odds="+2000" data-tier="2">
+                <span class="name">Cameron Smith</span>
+                <span class="odds">+2000</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier 3 -->
+          <div class="tier" data-tier="3">
+            <div class="tier-header">
+              <span class="tier-label">Tier 3</span>
+              <span class="tier-limit">Pick ≤ 1</span>
+            </div>
+            <div class="players" role="list">
+              <div class="player" role="listitem" data-player-id="tommy-fleetwood" data-odds="+2800" data-tier="3">
+                <span class="name">Tommy Fleetwood</span>
+                <span class="odds">+2800</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="max-homa" data-odds="+3000" data-tier="3">
+                <span class="name">Max Homa</span>
+                <span class="odds">+3000</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="viktor-hovland" data-odds="+3200" data-tier="3">
+                <span class="name">Viktor Hovland</span>
+                <span class="odds">+3200</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="shane-lowry" data-odds="+3300" data-tier="3">
+                <span class="name">Shane Lowry</span>
+                <span class="odds">+3300</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tier 4 -->
+          <div class="tier" data-tier="4">
+            <div class="tier-header">
+              <span class="tier-label">Tier 4</span>
+              <span class="tier-limit">Pick ≤ 1</span>
+            </div>
+            <div class="players" role="list">
+              <div class="player" role="listitem" data-player-id="wyndham-clark" data-odds="+4500" data-tier="4">
+                <span class="name">Wyndham Clark</span>
+                <span class="odds">+4500</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="collin-morikawa" data-odds="+4000" data-tier="4">
+                <span class="name">Collin Morikawa</span>
+                <span class="odds">+4000</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="jordan-spieth" data-odds="+6000" data-tier="4">
+                <span class="name">Jordan Spieth</span>
+                <span class="odds">+6000</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+              <div class="player" role="listitem" data-player-id="jason-day" data-odds="+6500" data-tier="4">
+                <span class="name">Jason Day</span>
+                <span class="odds">+6500</span>
+                <div class="actions"><button class="draft-btn" data-action="draft">Draft</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- Middle: Draft Board -->
+      <section class="card" aria-label="Draft Board">
+        <h2>Draft Board</h2>
+        <p class="subtle">Snake order supported • 4 rounds • 4 teams</p>
+        <div class="board" id="draft-board">
+          <!-- Board is rebuilt by JS on start/reset to guarantee correct order. -->
+        </div>
+      </section>
+
+      <!-- Right: Teams / Rosters -->
+      <aside class="card" aria-label="Teams">
+        <h2>Teams</h2>
+        <div class="teams" id="teams"></div>
+      </aside>
+    </section>
+
+    <!-- Leaderboard & Live Scoring -->
+    <section class="card" aria-label="Leaderboard" style="margin-top:16px">
+      <h2>Leaderboard</h2>
+      <p class="subtle">Track drafted golfers round-by-round. Enter each round's <strong>to-par</strong> (R1–R4) to see the auto-summed total.</p>
+
+      <div id="team-totals" class="teams" style="margin-bottom:12px"></div>
+
+      <div id="team-leaderboards" class="team-leaderboards"></div>
+
+      <div class="controls" style="margin-top:12px">
+        <div class="control" style="flex:1 1 320px">
+          <label for="scores-csv">Import CSV (player-id, r1, r2, r3, r4)</label>
+          <input id="scores-csv" type="text" placeholder="jon-rahm,-2,-1,0,+3; rory-mcilroy,-1,0,-2,+1" />
+        </div>
+        <button class="button" data-action="import-scores">Import</button>
+        <button class="button secondary" data-action="export-scores">Export Scores CSV</button>
+      </div>
+    </section>
+
+    <!-- Rules & Notes -->
+    <section class="card" style="margin-top:16px" aria-label="Rules and Notes">
+      <h2>Rules & Notes</h2>
+      <div class="rules">
+        <div class="rule">4 players, 4 rounds, snake or linear draft. Each team must draft exactly one golfer from each tier (T1–T4).</div>
+        <div class="rule">Odds shown are placeholders. Replace with current lines from your source of choice.</div>
+        <div class="rule">This file now includes vanilla JavaScript to power drafting, CSV export, and accessibility announcements.</div>
+        <div class="rule">Keyboard: Use Tab/Enter to activate Draft buttons. Screen readers hear pick updates via a live region.</div>
+      </div>
+    </section>
+
+    <footer>
+      <div>© <span id="year"></span> Majors Draft</div>
+      <div class="subtle">Template v1.2 • HTML + CSS + JS</div>
+    </footer>
+  </div>
+
+  <!-- Draft Logic (Vanilla JS) -->
+  <script src="main.js" defer></script>
+</body>
+</html>
