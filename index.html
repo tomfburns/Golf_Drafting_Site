@@ -6,61 +6,35 @@
   <title>Golf Majors Draft</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body class="theme-masters">
+<body class="theme-masters" data-page="draft">
   <div class="shell">
     <!-- ===== Topbar ===== -->
     <header class="topbar" role="banner">
       <div class="brand" aria-label="Site brand">
-        <img class="logo" src="/Users/thomasburns/Documents/PythonProjects/Golf_Drafting_Site/Masters_Logo.png" alt="Masters Tournament logo" />
-        <h1>Golf Majors Draft</h1>
+        <img class="logo" src="/Users/thomasburns/Documents/PythonProjects/Golf_Drafting_Site/Masters_Logo.png" alt="Tournament logo" data-hook="tournament-logo" />
       </div>
+      <button class="topbar__menu-toggle" type="button" aria-label="Toggle menu" aria-expanded="false" data-action="toggle-topbar-menu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
       <div class="controls" role="group" aria-label="Draft Controls">
-        <div class="control">
-          <label for="tournament">Tournament</label>
-          <select id="tournament" name="tournament" data-hook="tournament-select">
-            <option>Masters</option>
-            <option>PGA Championship</option>
-            <option>U.S. Open</option>
-            <option>The Open</option>
-          </select>
+        <div class="control control--tournaments" role="group" aria-label="Tournament">
+          <div class="tournament-tabs" data-hook="tournament-select" role="tablist" aria-label="Choose tournament">
+            <button type="button" class="tournament-tab" data-tournament="Masters" role="tab" aria-selected="true" tabindex="0">Masters</button>
+            <button type="button" class="tournament-tab" data-tournament="PGA Championship" role="tab" aria-selected="false" tabindex="-1">PGA Championship</button>
+            <button type="button" class="tournament-tab" data-tournament="U.S. Open" role="tab" aria-selected="false" tabindex="-1">U.S. Open</button>
+            <button type="button" class="tournament-tab" data-tournament="The Open" role="tab" aria-selected="false" tabindex="-1">The Open</button>
+          </div>
         </div>
-        <div class="control">
-          <label for="format">Format</label>
-          <select id="format" name="format" data-hook="format-select">
-            <option>Snake</option>
-            <option>Linear</option>
-          </select>
-        </div>
-        <div class="control">
-          <label for="players">Players</label>
-          <select id="players" name="players" data-hook="players-select">
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4" selected>4</option>
-          </select>
-        </div>
-        <button class="button secondary" data-action="reset" aria-label="Reset Board">Reset</button>
-        <button class="button secondary" data-action="export" aria-label="Export CSV">Export CSV</button>
+        <a class="button secondary" href="leaderboard.html" role="link" aria-label="View leaderboard">Leaderboard</a>
       </div>
     </header>
 
-    <!-- Leaderboard & Live Scoring -->
-    <section class="card" aria-label="Leaderboard" style="margin-top:16px">
-      <h2>Leaderboard</h2>
-      <p class="subtle">Track drafted golfers round-by-round. Enter each round's <strong>to-par</strong> (R1–R4) to see the auto-summed total.</p>
-
-      <div id="team-totals" class="teams" style="margin-bottom:12px"></div>
-
-      <div id="team-leaderboards" class="team-leaderboards"></div>
-
-      <div class="controls" style="margin-top:12px">
-        <div class="control" style="flex:1 1 320px">
-          <label for="scores-csv">Import CSV (player-id, r1, r2, r3, r4)</label>
-          <input id="scores-csv" type="text" placeholder="jon-rahm,-2,-1,0,+3; rory-mcilroy,-1,0,-2,+1" />
-        </div>
-        <button class="button" data-action="import-scores">Import</button>
-        <button class="button secondary" data-action="export-scores">Export Scores CSV</button>
-      </div>
+    <section class="card" aria-label="Team Setup" style="margin-top:16px">
+      <h2>Teams</h2>
+      <div id="team-name-editor" class="team-name-editor" aria-label="Team names"></div>
+      <div id="team-totals" class="teams" style="margin-top:12px"></div>
     </section>
 
     <!-- ===== Main Grid ===== -->
@@ -86,10 +60,10 @@
         </form>
 
         <div class="odds-import">
-          <label for="odds-csv">Import Odds CSV (Player, Odds)</label>
-          <textarea id="odds-csv" placeholder="Rory McIlroy,+650
-Scottie Scheffler,+450" aria-label="Odds CSV"></textarea>
-          <button class="button secondary" data-action="import-odds">Import Odds</button>
+          <label for="odds-csv">Import Players CSV (Player, Odds, Tier)</label>
+          <textarea id="odds-csv" placeholder="Rory McIlroy,+650,1
+Scottie Scheffler,+450,1" aria-label="Players CSV"></textarea>
+          <button class="button secondary" data-action="import-odds">Import Players</button>
         </div>
 
         <div class="tiers" id="tiers">
@@ -216,8 +190,32 @@ Scottie Scheffler,+450" aria-label="Odds CSV"></textarea>
       </aside>
 
       <div class="draft-column">
-        <div class="draft-actions">
-          <button class="button" data-action="start-draft" aria-label="Start Draft">Start Draft</button>
+        <div class="draft-topbar">
+          <div class="draft-controls">
+            <div class="draft-controls__group">
+              <button class="button" data-action="start-draft" aria-label="Start Draft">Start Draft</button>
+              <div class="draft-controls__group">
+              <div class="control">
+                <label for="format">Format</label>
+                <select id="format" name="format" data-hook="format-select">
+                  <option>Snake</option>
+                  <option>Linear</option>
+                </select>
+              </div>
+              <div class="control">
+                <label for="players">Players</label>
+                <select id="players" name="players" data-hook="players-select">
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4" selected>4</option>
+                </select>
+              </div>
+            </div>
+            <div class="draft-controls__actions">
+              <button class="button secondary" data-action="reset" aria-label="Reset Board">Reset</button>
+              <button class="button secondary" data-action="export" aria-label="Export CSV">Export CSV</button>
+            </div>
+          </div>
         </div>
         <!-- Middle: Draft Board -->
         <section class="card" aria-label="Draft Board">
@@ -231,27 +229,7 @@ Scottie Scheffler,+450" aria-label="Odds CSV"></textarea>
 
     </section>
 
-    <!-- Teams -->
-    <section class="card" aria-label="Teams" style="margin-top:16px">
-      <h2>Teams</h2>
-      <div class="teams" id="teams"></div>
-    </section>
-
-    <!-- Rules & Notes -->
-    <section class="card" style="margin-top:16px" aria-label="Rules and Notes">
-      <h2>Rules & Notes</h2>
-      <div class="rules">
-        <div class="rule">4 players, 4 rounds, snake or linear draft. Each team must draft exactly one golfer from each tier (T1–T4).</div>
-        <div class="rule">Odds shown are placeholders. Replace with current lines from your source of choice.</div>
-        <div class="rule">This file now includes vanilla JavaScript to power drafting, CSV export, and accessibility announcements.</div>
-        <div class="rule">Keyboard: Use Tab/Enter to activate Draft buttons. Screen readers hear pick updates via a live region.</div>
-      </div>
-    </section>
-
-    <footer>
-      <div>© <span id="year"></span> Majors Draft</div>
-      <div class="subtle">Template v1.2 • HTML + CSS + JS</div>
-    </footer>
+    <div id="teams" hidden></div>
   </div>
 
   <!-- Draft Logic (Vanilla JS) -->
