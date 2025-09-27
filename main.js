@@ -144,7 +144,7 @@
         const logo = qs('[data-hook="tournament-logo"]');
         if (logo) {
           const filename = tournamentLogos[key] || 'Masters_Logo.png';
-          logo.setAttribute('src', filename);
+          logo.setAttribute('src', `/Users/thomasburns/Documents/PythonProjects/Golf_Drafting_Site/${filename}`);
           logo.setAttribute('alt', `${tournament} logo`);
         }
         renderScoreChart();
