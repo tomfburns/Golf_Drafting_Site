@@ -133,6 +133,15 @@ socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 # REST API routes
 # ----------------------------------------------------------------------------
 
+@app.route('/')
+def index():
+    return {'message': 'Draft backend is running'}, 200
+
+@app.route('/', methods=['GET'])
+def root() -> tuple:
+    return jsonify({"status": "ok", "service": "golf-draft-backend"})
+
+
 @app.route('/api/health', methods=['GET'])
 def health() -> tuple:
     return jsonify({"status": "ok"})
