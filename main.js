@@ -33,8 +33,8 @@
       const TIER_VALUES = [1, 2, 3, 4];
       const MOBILE_MENU_BREAKPOINT = 900;
       const dragState = { card: null };
-      const API_BASE_URL = 'http://localhost:5001/api';
-      const SOCKET_URL = 'http://localhost:5001';
+      const API_BASE_URL = window.__API_BASE__ || 'https://your-render-service.onrender.com/api';
+      const SOCKET_URL = window.__SOCKET_BASE__ || 'https://your-render-service.onrender.com';
       const CLIENT_ID = `client-${Math.random().toString(36).slice(2)}`;
       let socket = null;
       let currentDraftId = null;
