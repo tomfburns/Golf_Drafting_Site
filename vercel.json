@@ -1,0 +1,10 @@
+{
+  "headers": [
+    {
+      "source": "/(main\\.js)",
+      "headers": [
+        { "key": "Cache-Control", "value": "max-age=0, s-maxage=0, must-revalidate" }
+      ]
+    }
+  ]
+}
