@@ -33,6 +33,12 @@
       const TIER_VALUES = [1, 2, 3, 4];
       const MOBILE_MENU_BREAKPOINT = 900;
       const dragState = { card: null };
+      const API_BASE_URL = 'http://localhost:5001/api';
+      const SOCKET_URL = 'http://localhost:5001';
+      const CLIENT_ID = `client-${Math.random().toString(36).slice(2)}`;
+      let socket = null;
+      let currentDraftId = null;
+      let isServerSynchronized = false;
       const STORAGE_KEYS = {
         snapshot: 'majors-draft:snapshot',
         history: 'majors-draft:history'
@@ -847,7 +853,7 @@
       }
 
       function persistDraftSnapshot() {
-        if (!STORAGE_AVAILABLE) return;
+        if (!STORAGE_AVAILABLE || isServerSynchronized) return;
         const data = serializeDraftSnapshot();
         if (!data) {
           clearDraftSnapshot();
@@ -1386,6 +1392,103 @@
         if (header) header.appendChild(el('span', { class: 'chip', text: 'On the clock' }));
       }
 
+      function normalizeServerDraft(serverDraft) {
+        if (!serverDraft || typeof serverDraft !== 'object') return null;
+        const players = serverDraft.players || {};
+        const teamsArray = [];
+        const teamNamesMap = {};
+
+        Object.values(serverDraft.teams || {}).forEach(team => {
+          const teamNum = Number(team.id);
+          if (!teamNum) return;
+          teamNamesMap[String(teamNum)] = team.name || `Team ${teamNum}`;
+          const picks = Array.isArray(team.picks) ? team.picks : [];
+          const slots = picks.map(pick => {
+            const playerDetails = players[pick.player_id] || {};
+            return {
+              id: pick.player_id,
+              tier: Number(playerDetails.tier) || 1,
+              name: playerDetails.name || 'Player',
+              odds: playerDetails.odds || '',
+              rounds: [0, 0, 0, 0]
+            };
+          });
+          teamsArray.push({ teamNum, name: team.name || `Team ${teamNum}`, slots });
+        });
+
+        const board = [];
+        Object.values(serverDraft.teams || {}).forEach(team => {
+          const teamNum = Number(team.id);
+          if (!teamNum) return;
+          (team.picks || []).forEach(pick => {
+            const playerDetails = players[pick.player_id] || {};
+            board.push({
+              round: Number(pick.round) || 0,
+              teamNum,
+              id: pick.player_id,
+              name: playerDetails.name || 'Player',
+              odds: playerDetails.odds || '',
+              tier: Number(playerDetails.tier) || 1
+            });
+          });
+        });
+
+        return {
+          tournament: serverDraft.tournament,
+          format: serverDraft.format,
+          teamCount: serverDraft.teamCount,
+          teams: teamsArray,
+          teamNames: teamNamesMap,
+          board,
+          pickOrder: Array.isArray(serverDraft.pickOrder) ? serverDraft.pickOrder.slice() : [],
+          currentPick: Number(serverDraft.currentPickIndex) || 0,
+          isActive: Boolean(serverDraft.isActive),
+          hasCompleted: Boolean(serverDraft.hasCompleted),
+          draftedPlayers: board.map(entry => entry.id)
+        };
+      }
+
+      async function bootstrapServerDraft() {
+        try {
+          const res = await fetch(`${API_BASE_URL}/drafts/default`);
+          if (!res.ok) {
+            throw new Error(`Failed to load draft: ${res.status}`);
+          }
+          const serverDraft = await res.json();
+          if (serverDraft && serverDraft.id) {
+            currentDraftId = serverDraft.id;
+          }
+          const normalized = normalizeServerDraft(serverDraft);
+          if (normalized) {
+            isServerSynchronized = true;
+            applySnapshot(normalized);
+          }
+          connectSocket();
+        } catch (err) {
+          console.warn('[Server Sync] Unable to load draft from backend:', err);
+        }
+      }
+
+      function connectSocket() {
+        if (socket || typeof io !== 'function') return;
+        socket = io(SOCKET_URL, { transports: ['websocket', 'polling'] });
+        socket.on('connect', () => {
+          if (currentDraftId) {
+            socket.emit('join_draft', { draftId: currentDraftId, userId: CLIENT_ID });
+          }
+        });
+        socket.on('draft_state', (serverDraft) => {
+          const normalized = normalizeServerDraft(serverDraft);
+          if (normalized) {
+            isServerSynchronized = true;
+            applySnapshot(normalized);
+          }
+        });
+        socket.on('error', (payload) => {
+          console.error('[Socket]', payload);
+        });
+      }
+
       function teamHasTierFilled(teamNum, tier) {
         const slot = qs(`.team[data-team="${teamNum}"] .slot[data-tier="${tier}"]`);
         return slot && slot.textContent.trim().length > 0;
@@ -1462,6 +1565,16 @@
 
         const teamNum = currentTeam();
         const round = currentRound();
+
+        if (isServerSynchronized && socket && socket.connected && currentDraftId) {
+          socket.emit('submit_pick', {
+            draftId: currentDraftId,
+            teamId: teamNum,
+            playerId: id,
+            userId: CLIENT_ID
+          });
+          return;
+        }
 
         if (teamHasTierFilled(teamNum, tier)) { announce(`${findTeamName(teamNum)} already has a Tier ${tier} pick.`); return; }
 
@@ -1638,7 +1751,7 @@
       }
 
       // ===== Init =====
-      function init() {
+      async function init() {
         const y = qs('#year'); if (y) y.textContent = new Date().getFullYear();
         const formatSelect = qs('[data-hook="format-select"]');
         if (formatSelect) state.format = formatSelect.value;
@@ -1668,6 +1781,7 @@
         }
         announce('Draft ready. Choose Start Draft to begin.');
         recomputeTeamTotals();
+        await bootstrapServerDraft();
       }
 
       // ===== Smoke Tests (non-destructive) =====
@@ -1687,7 +1801,6 @@
         }
         })();
 
-      init();
-      runSmokeTests();
+      init().then(() => runSmokeTests());
     })();
   
